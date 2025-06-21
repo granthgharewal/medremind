@@ -44,7 +44,7 @@ const AuthScreen = () => {
       });
 
       if (auth.success) {
-        router.replace('/(tabs)'); //TODO:  Navigate to the home  screen
+        router.replace('/home');
       } else {
         setError('Authentication failed. Please try again.');
       }
