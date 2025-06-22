@@ -50,7 +50,7 @@ function CircularProgress({
     <View style={styles.progressContainer}>
       <View style={styles.progressTextContainer}>
         <Text style={styles.progressPercentage}>{Math.round(progress)}%</Text>
-        <Text>
+        <Text style={styles.progressLabel}>
           {completedDoses} of {totalDoses} doses
         </Text>
       </View>
@@ -105,11 +105,14 @@ export default function HomeScreen() {
                 size={24}
                 color={'white'}
               />
+              <View style={styles.notificationBadge}>
+                <Text style={styles.notificationCount}>3</Text>
+              </View>
             </TouchableOpacity>
           </View>
           {/* Circular Progress */}
           <CircularProgress
-            progress={0} // Example progress
+            progress={10} // Example progress
             totalDoses={10} // Example total doses
             completedDoses={5} // Example completed doses
           />
@@ -140,7 +143,6 @@ const styles = StyleSheet.create({
     width: '100%',
     marginBottom: 20,
   },
-  progressRing: {},
   flex1: {
     flex: 1,
   },
@@ -157,15 +159,52 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginLeft: 8,
   },
+  notificationBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    backgroundColor: '#FF5252',
+    minWidth: 20,
+    height: 20,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#146922',
+    paddingHorizontal: 4,
+  },
+  notificationCount: {
+    color: 'white',
+    fontSize: 11,
+    fontWeight: 'bold',
+  },
   progressContainer: {
     alignItems: 'center',
     justifyContent: 'center',
     marginVertical: 10,
+  },
+  progressDetails: {
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.8)',
+    marginTop: 4,
   },
   progressTextContainer: {
     position: 'absolute',
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 1,
+  },
+  progressLabel: {
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.9)',
+    marginTop: 4,
+  },
+  progressPercentage: {
+    fontSize: 36,
+    fontWeight: 'bold',
+    color: 'white',
+  },
+  progressRing: {
+    transform: [{rotate: '-90deg'}],
   },
 });
