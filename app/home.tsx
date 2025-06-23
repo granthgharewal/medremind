@@ -1,5 +1,7 @@
+import {QUICK_ACTIONS} from '@/constants/quickActions';
 import {Ionicons} from '@expo/vector-icons';
 import {LinearGradient} from 'expo-linear-gradient';
+import {Link} from 'expo-router';
 import {useState, useEffect, useRef, useCallback, use} from 'react';
 import {
   Text,
@@ -118,6 +120,39 @@ export default function HomeScreen() {
           />
         </View>
       </LinearGradient>
+      {/* Quick Actions */}
+      <View style={styles.content}>
+        <View style={styles.quickActionsContainer}>
+          <Text style={styles.sectionTitle}>Quick Actions</Text>
+          <View style={styles.quickActionsGrid}>
+            {QUICK_ACTIONS.map((action) => (
+              <Link
+                href={action.route}
+                key={action.label}
+                asChild
+              >
+                <TouchableOpacity style={styles.actionButton}>
+                  <LinearGradient
+                    colors={action.gradient}
+                    style={styles.actionGradient}
+                  >
+                    <View style={styles.actionContent}>
+                      <View style={styles.actionIcon}>
+                        <Ionicons
+                          name={action.icon}
+                          size={28}
+                          color='white'
+                        />
+                      </View>
+                      <Text style={styles.actionLabel}>{action.label}</Text>
+                    </View>
+                  </LinearGradient>
+                </TouchableOpacity>
+              </Link>
+            ))}
+          </View>
+        </View>
+      </View>
     </ScrollView>
   );
 }
@@ -125,7 +160,7 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1a8e2d',
+    backgroundColor: '#ffffe9',
   },
   header: {
     paddingTop: 50,
@@ -206,5 +241,53 @@ const styles = StyleSheet.create({
   },
   progressRing: {
     transform: [{rotate: '-90deg'}],
+  },
+  actionButton: {
+    width: (width - 52) / 2,
+    height: 110,
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  content: {
+    flex: 1,
+    paddingTop: 20,
+  },
+  quickActionsContainer: {
+    paddingHorizontal: 20,
+    marginBottom: 25,
+  },
+  quickActionsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+    marginTop: 15,
+  },
+  actionGradient: {
+    flex: 1,
+    padding: 15,
+  },
+  actionContent: {
+    flex: 1,
+    justifyContent: 'space-between',
+  },
+  actionIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  actionLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: 'white',
+    marginTop: 8,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#1a1a1a',
+    marginBottom: 5,
   },
 });
