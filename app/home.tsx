@@ -87,6 +87,7 @@ function CircularProgress({
 }
 
 export default function HomeScreen() {
+      const [todaysMedications, setTodaysMedications] = useState<[]>([]);
   return (
     <ScrollView
       style={styles.container}
@@ -152,6 +153,44 @@ export default function HomeScreen() {
             ))}
           </View>
         </View>
+      </View>
+
+      <View style={styles.section}>
+        <View style={styles.sectionHeader}>
+          <Text> Today's Schedule</Text>
+          <Link
+            href='/calender'
+            asChild
+          >
+            <TouchableOpacity>
+              <Text style={styles.seeAllButton}>See All</Text>
+            </TouchableOpacity>
+          </Link>
+        </View>
+        {todaysMedications.length === 0 ? (
+          <View style={styles.emptyState}>
+            <Ionicons
+              name='medical-outline'
+              size={48}
+              color='#ccc'
+            />
+            <Text style={styles.emptyStateText}>
+              No medications scheduled for today
+            </Text>
+            <Link
+              href='/medications/add'
+              asChild
+            >
+              <TouchableOpacity style={styles.addMedicationButton}>
+                <Text style={styles.addMedicationButtonText}>
+                  Add Medication
+                </Text>
+              </TouchableOpacity>
+            </Link>
+          </View>
+        ) : (
+          <></>
+        )}
       </View>
     </ScrollView>
   );
@@ -289,5 +328,56 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#1a1a1a',
     marginBottom: 5,
+  },
+  section: {
+    paddingHorizontal: 20,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  seeAllButton: {
+    color: '#2E7D32',
+    fontWeight: '600',
+  },
+  emptyState: {
+    alignItems: "center",
+    padding: 30,
+    backgroundColor: "white",
+    borderRadius: 16,
+    marginTop: 10,
+  },
+  emptyStateText: {
+    fontSize: 16,
+    color: "#666",
+    marginTop: 10,
+    marginBottom: 20,
+  },
+  addMedicationButton: {
+    backgroundColor: "#1a8e2d",
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 20,
+  },
+  addMedicationButtonText: {
+    color: "white",
+    fontWeight: "600",
+  },
+  takenBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#E8F5E9",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+    marginLeft: 10,
+  },
+  takenText: {
+    color: "#4CAF50",
+    fontWeight: "600",
+    fontSize: 14,
+    marginLeft: 4,
   },
 });
