@@ -12,6 +12,7 @@ import {
   Dimensions,
   Animated,
   StyleSheet,
+  Modal,
 } from 'react-native';
 import Svg, {Circle} from 'react-native-svg';
 
@@ -87,7 +88,8 @@ function CircularProgress({
 }
 
 export default function HomeScreen() {
-      const [todaysMedications, setTodaysMedications] = useState<[]>([]);
+  const [todaysMedications, setTodaysMedications] = useState<[]>([]);
+  const [showNotifications, setShowNotifications] = useState(false);
   return (
     <ScrollView
       style={styles.container}
@@ -102,7 +104,10 @@ export default function HomeScreen() {
             <View style={styles.flex1}>
               <Text style={styles.greeting}>Daily Progress</Text>
             </View>
-            <TouchableOpacity style={styles.notificationButton}>
+            <TouchableOpacity
+              style={styles.notificationButton}
+              onPress={() => setShowNotifications(true)}
+            >
               <Ionicons
                 name='notifications-outline'
                 size={24}
@@ -192,6 +197,55 @@ export default function HomeScreen() {
           <></>
         )}
       </View>
+      <Modal
+        visible={showNotifications}
+        animationType='slide'
+        transparent={true}
+        onRequestClose={() => setShowNotifications(false)}
+      >
+        <View style={styles.modalOverlay} onTouchStart={() => setShowNotifications(false)}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Notifications</Text>
+              <TouchableOpacity
+                onPress={() => setShowNotifications(false)}
+                style={styles.closeButton}
+              >
+                <Ionicons
+                  name='close'
+                  size={24}
+                  color='#333'
+                />
+              </TouchableOpacity>
+            </View>
+            {todaysMedications.map((medication) => (
+              <View
+                key={medication.id}
+                style={styles.notificationItem}
+              >
+                <View style={styles.notificationIcon}>
+                  <Ionicons
+                    name='medical'
+                    size={24}
+                    color={medication.color}
+                  />
+                </View>
+                <View style={styles.notificationContent}>
+                  <Text style={styles.notificationTitle}>
+                    {medication.name}
+                  </Text>
+                  <Text style={styles.notificationMessage}>
+                    {medication.dosage}
+                  </Text>
+                  <Text style={styles.notificationTime}>
+                    {medication.times[0]}
+                  </Text>
+                </View>
+              </View>
+            ))}
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 }
@@ -343,41 +397,101 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   emptyState: {
-    alignItems: "center",
+    alignItems: 'center',
     padding: 30,
-    backgroundColor: "white",
+    backgroundColor: 'white',
     borderRadius: 16,
     marginTop: 10,
   },
   emptyStateText: {
     fontSize: 16,
-    color: "#666",
+    color: '#666',
     marginTop: 10,
     marginBottom: 20,
   },
   addMedicationButton: {
-    backgroundColor: "#1a8e2d",
+    backgroundColor: '#1a8e2d',
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 20,
   },
   addMedicationButtonText: {
-    color: "white",
-    fontWeight: "600",
+    color: 'white',
+    fontWeight: '600',
   },
   takenBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#E8F5E9",
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#E8F5E9',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 12,
     marginLeft: 10,
   },
   takenText: {
-    color: "#4CAF50",
-    fontWeight: "600",
+    color: '#4CAF50',
+    fontWeight: '600',
     fontSize: 14,
     marginLeft: 4,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 20,
+    maxHeight: '80%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  notificationItem: {
+    flexDirection: 'row',
+    padding: 15,
+    borderRadius: 12,
+    backgroundColor: '#f5f5f5',
+    marginBottom: 10,
+  },
+  closeButton: {
+    padding: 5,
+  },
+  notificationIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#E8F5E9',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 15,
+  },
+  notificationContent: {
+    flex: 1,
+  },
+  notificationTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 4,
+  },
+  notificationMessage: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 4,
+  },
+  notificationTime: {
+    fontSize: 12,
+    color: '#999',
   },
 });
