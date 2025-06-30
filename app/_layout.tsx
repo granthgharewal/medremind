@@ -20,6 +20,14 @@ export default function Layout() {
             headerShown: false,
           }}
         />
+        <Stack.Screen
+          name='medications/add'
+          options={{
+            headerShown: false,
+            headerBackTitle: '',
+            title: '',
+          }}
+        />
       </Stack>
     </>
   );
