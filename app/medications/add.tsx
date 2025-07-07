@@ -162,6 +162,77 @@ const AddMedicationScreen = () => {
       </View>
     );
   };
+
+  const validateForm = () => {
+    const newErrors: {[key: string]: string} = {};
+    if (!form.name.trim()) {
+      newErrors.name = 'Medication name is required';
+    }
+
+    if (!form.dosage.trim()) {
+      newErrors.dosage = 'Dosage is required';
+    }
+
+    if (!form.frequency) {
+      newErrors.frequency = 'Frequency is required';
+    }
+
+    if (!form.duration) {
+      newErrors.duration = 'Duration is required';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSave = async () => {
+    try {
+      if (!validateForm()) {
+        Alert.alert('Error', 'Please fill in all required fields correctly');
+        return;
+      }
+
+      if (isSubmitting) return;
+      setIsSubmitting(true);
+
+      // Generate a random color
+      const colors = ['#4CAF50', '#2196F3', '#FF9800', '#E91E63', '#9C27B0'];
+      const randomColor = colors[Math.floor(Math.random() * colors.length)];
+
+      const medicationData = {
+        id: Math.random().toString(36).substring(2, 9),
+        ...form,
+        currentSupply: form.currentSupply ? Number(form.currentSupply) : 0,
+        totalSupply: form.currentSupply ? Number(form.currentSupply) : 0,
+        refillAt: form.refillAt ? Number(form.refillAt) : 0,
+        startDate: form.startDate.toISOString(),
+        color: randomColor,
+      };
+
+      Alert.alert(
+        'Success',
+        'Medication added successfully',
+        [
+          {
+            text: 'OK',
+            onPress: () => router.back(),
+          },
+        ],
+        {cancelable: false}
+      );
+    } catch (error) {
+      console.error('Save error:', error);
+      Alert.alert(
+        'Error',
+        'Failed to save medication. Please try again.',
+        [{text: 'OK'}],
+        {cancelable: false}
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <View style={styles.container}>
       <LinearGradient
@@ -355,6 +426,7 @@ const AddMedicationScreen = () => {
                   }}
                   trackColor={{false: '#ddd', true: '#1a8e2d'}}
                   thumbColor={'white'}
+                  style={{transform: [{scaleX: 1.1}, {scaleY: 1.1}]}}
                 />
               </View>
             </View>
@@ -383,11 +455,7 @@ const AddMedicationScreen = () => {
               styles.saveButton,
               isSubmitting && styles.saveButtonDisabled,
             ]}
-            onPress={() => {
-              // Handle save action
-              Alert.alert('Medication saved successfully!');
-              router.back();
-            }}
+            onPress={() => handleSave()}
           >
             <LinearGradient
               style={styles.saveButtonGradient}
