@@ -16,6 +16,7 @@ import {
 import DateTimePicker from '@react-native-community/datetimepicker';
 
 import {useRouter} from 'expo-router';
+import {addMedication} from '@/utils/storage';
 
 const FREQUENCIES = [
   {
@@ -71,9 +72,23 @@ const AddMedicationScreen = () => {
   const [selectedFrequency, setSelectedFrequency] = useState<string>('');
   const [selectedDuration, setSelectedDuration] = useState<string>('');
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [showDateTimePicker, setshowDateTimePicker] = useState(false);
+  const [showDateTimePicker, setshowDateTimePicker] = useState({
+    id: '',
+    visible: false,
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
+
+  const handleFrequencySelect = (freq: string) => {
+    setSelectedFrequency(freq);
+    const freqData = FREQUENCIES.find((f) => f.label === freq);
+    setForm((prev) => ({
+      ...prev,
+      frequency: freq,
+      times: freqData?.times ?? [],
+    }));
+  };
+
   const renderFrequencyOptions = () => {
     return (
       <View style={styles.optionsGrid}>
@@ -84,10 +99,7 @@ const AddMedicationScreen = () => {
               styles.optionCard,
               selectedFrequency === freq.id && styles.selectedOptionCard,
             ]}
-            onPress={() => {
-              setSelectedFrequency(freq.label);
-              setForm((prev) => ({...prev, frequency: freq.label}));
-            }}
+            onPress={() => handleFrequencySelect(freq.label)}
           >
             <View
               style={[
@@ -208,6 +220,9 @@ const AddMedicationScreen = () => {
         startDate: form.startDate.toISOString(),
         color: randomColor,
       };
+
+      await addMedication(medicationData);
+
 
       Alert.alert(
         'Success',
@@ -340,15 +355,19 @@ const AddMedicationScreen = () => {
                   }}
                 />
               )}
+              {/* Medication Times */}
               {!!form.frequency && form.frequency !== 'As needed' && (
                 <View style={styles.timesContainer}>
                   <Text style={styles.timesTitle}>Medication Times</Text>
                   {form.times.map((time, index) => (
                     <TouchableOpacity
-                      key={index}
+                      key={`${index}-${time}`}
                       style={styles.timeButton}
                       onPress={() => {
-                        setshowDateTimePicker(true);
+                        setshowDateTimePicker({
+                          id: index.toString(),
+                          visible: true,
+                        });
                       }}
                     >
                       <View style={styles.timeIconContainer}>
@@ -369,10 +388,12 @@ const AddMedicationScreen = () => {
                 </View>
               )}
 
-              {showDateTimePicker && (
+              {showDateTimePicker?.id !== '' && (
                 <DateTimePicker
                   value={(() => {
-                    const [hours, minutes] = form.times[0]
+                    const [hours, minutes] = form.times[
+                      Number(showDateTimePicker.id) || 0
+                    ]
                       .split(':')
                       .map(Number);
                     const date = new Date();
@@ -381,7 +402,7 @@ const AddMedicationScreen = () => {
                   })()}
                   mode='time'
                   onChange={(_, date) => {
-                    setshowDateTimePicker(false);
+                    setshowDateTimePicker({id: '', visible: false});
                     if (date) {
                       const newTimes = date?.toLocaleTimeString('default', {
                         hour: '2-digit',
@@ -391,7 +412,7 @@ const AddMedicationScreen = () => {
                       setForm((prev) => ({
                         ...prev,
                         times: prev.times.map((t, index) =>
-                          index === 0 ? newTimes : t
+                          index === Number(showDateTimePicker.id) ? newTimes : t
                         ),
                       }));
                     }
