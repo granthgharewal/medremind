@@ -1,35 +1,37 @@
-import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import { useEffect } from 'react';
-import { Animated, StyleSheet, Text, View, useAnimatedValue } from 'react-native';
+import {Ionicons} from '@expo/vector-icons';
+import {useRouter} from 'expo-router';
+import {useEffect, useRef} from 'react';
+import {Animated, StyleSheet, Text, View} from 'react-native';
 
 export default function SplashScreen() {
   const router = useRouter();
-  const fadeAnimation = useAnimatedValue(0);
-  const scaleAnimation = useAnimatedValue(0.5);
+  const fadeAnimation = useRef(new Animated.Value(0)).current;
+  const scaleAnimation = useRef(new Animated.Value(0.5)).current;
 
   useEffect(() => {
     // Start the animations
-     Animated.parallel([
-      Animated.timing(fadeAnimation, {
-        toValue: 1,
-        duration: 1000,
-        useNativeDriver: true,
-      }),
-      Animated.spring(scaleAnimation, {
-        toValue: 1,
-        tension: 10,
-        friction: 2,
-        useNativeDriver: true,
-      }),
-    ]).start();
+    Animated.parallel(
+      [
+        Animated.timing(fadeAnimation, {
+          toValue: 1,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+        Animated.spring(scaleAnimation, {
+          toValue: 1,
+          tension: 10,
+          friction: 2,
+          useNativeDriver: true,
+        }),
+      ],
+      {stopTogether: false}
+    ).start();
 
     const timer = setTimeout(() => {
       router.replace('/auth');
     }, 2000);
 
     return () => clearTimeout(timer);
-
   }, []);
 
   return (

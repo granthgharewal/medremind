@@ -106,14 +106,22 @@ export async function getTodaysDoses(): Promise<DosageHistory[]> {
 
 export async function updateDosageHistory(
   dosage: DosageHistory
-): Promise<void> {
+): Promise<DosageHistory[]> {
   try {
     const dosageHistory = await getDosageHistory();
-    dosageHistory.unshift(dosage);
-    await AsyncStorage.setItem(
-      DOSAGE_HISTORY_KEY,
-      JSON.stringify(dosageHistory)
+    const exisitngIndex = dosageHistory.findIndex(
+      (dose) => dose.medicationId === dosage.medicationId
     );
+    if (exisitngIndex !== -1) {
+      dosageHistory[exisitngIndex] = dosage;
+      await AsyncStorage.setItem(
+        DOSAGE_HISTORY_KEY,
+        JSON.stringify(dosageHistory)
+      );
+    } else {
+      console.warn('Dosage history entry not found for update');
+    }
+    return dosageHistory;
   } catch (error) {
     console.error('Error updating dosage history:', error);
     throw error;

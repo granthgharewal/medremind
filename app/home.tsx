@@ -1,18 +1,25 @@
 import {QUICK_ACTIONS} from '@/constants/quickActions';
+import {
+  DosageHistory,
+  getMedications,
+  getTodaysDoses,
+  Medication,
+  recordDose,
+} from '@/utils/storage';
 import {Ionicons} from '@expo/vector-icons';
 import {LinearGradient} from 'expo-linear-gradient';
-import {Link} from 'expo-router';
-import {useState, useEffect, useRef, useCallback, use} from 'react';
+import {Link, useFocusEffect, useRouter} from 'expo-router';
+import {useState, useEffect, useCallback, useRef} from 'react';
 import {
   Text,
   View,
   ScrollView,
   TouchableOpacity,
-  useAnimatedValue,
   Dimensions,
   Animated,
   StyleSheet,
   Modal,
+  Alert,
 } from 'react-native';
 import Svg, {Circle} from 'react-native-svg';
 
@@ -29,22 +36,22 @@ function CircularProgress({
   progress,
   totalDoses,
   completedDoses,
-}: CircularProgressProps) {
-  const animationValue = useAnimatedValue(0);
+}: Readonly<CircularProgressProps>) {
+  const animatedValue = useRef(new Animated.Value(0)).current;
   const size = width * 0.55;
   const strokeWidth = 15;
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
 
   useEffect(() => {
-    Animated.timing(animationValue, {
+    Animated.timing(animatedValue, {
       toValue: progress,
       duration: 1000,
       useNativeDriver: true,
     }).start();
   }, [progress]);
 
-  const animatedStrokeDashoffset = animationValue.interpolate({
+  const animatedStrokeDashoffset = animatedValue.interpolate({
     inputRange: [0, 100],
     outputRange: [circumference, 0],
   });
@@ -88,8 +95,81 @@ function CircularProgress({
 }
 
 export default function HomeScreen() {
-  const [todaysMedications, setTodaysMedications] = useState<[]>([]);
+  const [medications, setMedications] = useState<Medication[]>([]);
+  const [todaysMedications, setTodaysMedications] = useState<Medication[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [completedDoses, setCompletedDoses] = useState(0);
+  const [doseHistory, setDoseHistory] = useState<DosageHistory[]>([]);
+
+  const loadMedications = useCallback(async () => {
+    try {
+      const [allMedications, todaysDoses] = await Promise.all([
+        getMedications(),
+        getTodaysDoses(),
+      ]);
+      setDoseHistory(todaysDoses);
+      setMedications(allMedications);
+      // Filter medications for today
+      const today = new Date();
+      const todayMeds = allMedications.filter((med) => {
+        const startDate = new Date(med.startDate);
+        const durationDays = parseInt(med.duration.split(' ')[0]);
+
+        // For ongoing medications or if within duration
+        if (
+          durationDays === -1 ||
+          (today >= startDate &&
+            today <=
+              new Date(
+                startDate.getTime() + durationDays * 24 * 60 * 60 * 1000
+              ))
+        ) {
+          return true;
+        }
+        return false;
+      });
+
+      setTodaysMedications(todayMeds);
+
+      // Calculate completed doses
+      const completed = todaysDoses.filter((dose) => dose.taken).length;
+      setCompletedDoses(completed);
+    } catch (error) {
+      console.error('Error loading medications:', error);
+    }
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      const unsubscribe = () => {
+        // Cleanup if needed
+      };
+      loadMedications();
+      return () => unsubscribe();
+    }, [loadMedications])
+  );
+
+  const progress =
+    todaysMedications.length > 0
+      ? (completedDoses / (todaysMedications.length * 2)) * 100
+      : 0;
+
+  const isDoseTaken = (medicationId: string) => {
+    return doseHistory.some(
+      (dose) => dose.medicationId === medicationId && dose.taken
+    );
+  };
+
+  const handleTakeDose = async (medication: Medication) => {
+    try {
+      await recordDose(medication.id, true, new Date().toISOString());
+      await loadMedications(); // Reload data after recording dose
+    } catch (error) {
+      console.error('Error recording dose:', error);
+      Alert.alert('Error', 'Failed to record dose. Please try again.');
+    }
+  };
+
   return (
     <ScrollView
       style={styles.container}
@@ -120,9 +200,9 @@ export default function HomeScreen() {
           </View>
           {/* Circular Progress */}
           <CircularProgress
-            progress={10} // Example progress
-            totalDoses={10} // Example total doses
-            completedDoses={5} // Example completed doses
+            progress={progress}
+            totalDoses={todaysMedications.length * 2}
+            completedDoses={completedDoses}
           />
         </View>
       </LinearGradient>
@@ -194,7 +274,64 @@ export default function HomeScreen() {
             </Link>
           </View>
         ) : (
-          <></>
+          <>
+            {todaysMedications.map((medication) => {
+              const isTaken = isDoseTaken(medication.id);
+              return (
+                <View
+                  key={medication.id}
+                  style={styles.doseCard}
+                >
+                  <View
+                    style={[
+                      styles.doseBadge,
+                      {backgroundColor: `${medication.color}15`},
+                    ]}
+                  >
+                    <Ionicons
+                      name='medical'
+                      size={24}
+                      color={medication.color}
+                    />
+                  </View>
+                  <View style={styles.doseInfo}>
+                    <View>
+                      <Text style={styles.medicineName}>{medication.name}</Text>
+                      <Text style={styles.dosageInfo}>{medication.dosage}</Text>
+                    </View>
+                    <View style={styles.doseTime}>
+                      <Ionicons
+                        name='time-outline'
+                        size={16}
+                        color='#666'
+                      />
+                      <Text style={styles.timeText}>{medication.times[0]}</Text>
+                    </View>
+                  </View>
+                  {isTaken ? (
+                    <View style={[styles.takenBadge]}>
+                      <Ionicons
+                        name='checkmark-circle'
+                        size={20}
+                        color='#4CAF50'
+                      />
+                      <Text style={styles.takenText}>Taken</Text>
+                    </View>
+                  ) : (
+                    <TouchableOpacity
+                      style={[
+                        styles.takeDoseButton,
+                        {backgroundColor: medication.color},
+                      ]}
+                      onPress={() => handleTakeDose(medication)}
+                    >
+                      <Text style={styles.takeDoseText}>Take</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              );
+            })}
+          </>
         )}
       </View>
       <Modal
@@ -203,7 +340,10 @@ export default function HomeScreen() {
         transparent={true}
         onRequestClose={() => setShowNotifications(false)}
       >
-        <View style={styles.modalOverlay} onTouchStart={() => setShowNotifications(false)}>
+        <View
+          style={styles.modalOverlay}
+          onTouchStart={() => setShowNotifications(false)}
+        >
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Notifications</Text>
@@ -493,5 +633,61 @@ const styles = StyleSheet.create({
   notificationTime: {
     fontSize: 12,
     color: '#999',
+  },
+  doseCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'white',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  doseBadge: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 15,
+  },
+  doseInfo: {
+    flex: 1,
+    justifyContent: 'space-between',
+  },
+  medicineName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 4,
+  },
+  dosageInfo: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 4,
+  },
+  doseTime: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  timeText: {
+    marginLeft: 5,
+    color: '#666',
+    fontSize: 14,
+  },
+  takeDoseButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 15,
+    borderRadius: 15,
+    marginLeft: 10,
+  },
+  takeDoseText: {
+    color: 'white',
+    fontWeight: '600',
+    fontSize: 14,
   },
 });

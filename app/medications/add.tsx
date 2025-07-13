@@ -17,6 +17,10 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 
 import {useRouter} from 'expo-router';
 import {addMedication} from '@/utils/storage';
+import {
+  scheduleMedicationReminder,
+  scheduleRefillReminder,
+} from '@/utils/notification';
 
 const FREQUENCIES = [
   {
@@ -223,6 +227,13 @@ const AddMedicationScreen = () => {
 
       await addMedication(medicationData);
 
+      // Schedule reminders if enabled
+      if (medicationData.reminderEnabled) {
+        await scheduleMedicationReminder(medicationData);
+      }
+      if (medicationData.refillReminder) {
+        await scheduleRefillReminder(medicationData);
+      }
 
       Alert.alert(
         'Success',
