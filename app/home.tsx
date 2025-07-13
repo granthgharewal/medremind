@@ -244,7 +244,7 @@ export default function HomeScreen() {
         <View style={styles.sectionHeader}>
           <Text> Today's Schedule</Text>
           <Link
-            href='/calender'
+            href='/calendar/index'
             asChild
           >
             <TouchableOpacity>
