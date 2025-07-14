@@ -88,7 +88,7 @@ export default function CalendarScreen() {
           key={day}
           style={[
             styles.calendarDay,
-            isToday && styles.today,
+            day === selectedDate.getDate() && styles.today,
             hasDoses && styles.hasEvents,
           ]}
           onPress={() => setSelectedDate(date)}
