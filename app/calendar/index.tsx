@@ -134,9 +134,20 @@ export default function CalendarScreen() {
     );
 
     return medications.map((medication) => {
-      const taken = dayDoses.some(
-        (dose) => dose.medicationId === medication.id && dose.taken
-      );
+    const taken = dayDoses.some(
+      (dose) => dose.medicationId === medication.id && dose.taken
+    );
+    const startDate = new Date(medication.startDate.split('T')[0]);
+    const durationDays = parseInt(medication.duration, 10) || 0;
+    const endDate = new Date(startDate);
+    endDate.setDate(startDate.getDate() + durationDays - 1);
+
+    if (
+      selectedDate < startDate ||
+      selectedDate > endDate
+    ) {
+      return null;
+    }
 
       return (
         <View
