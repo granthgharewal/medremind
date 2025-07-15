@@ -143,7 +143,7 @@ export default function CalendarScreen() {
     endDate.setDate(startDate.getDate() + durationDays - 1);
 
     if (
-      selectedDate < startDate ||
+      selectedDate.getDate() < startDate.getDate() ||
       selectedDate > endDate
     ) {
       return null;

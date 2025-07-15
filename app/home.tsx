@@ -8,7 +8,7 @@ import {
 } from '@/utils/storage';
 import {Ionicons} from '@expo/vector-icons';
 import {LinearGradient} from 'expo-linear-gradient';
-import {Link, useFocusEffect, useRouter} from 'expo-router';
+import {Link, useFocusEffect} from 'expo-router';
 import {useState, useEffect, useCallback, useRef} from 'react';
 import {
   Text,
@@ -170,6 +170,12 @@ export default function HomeScreen() {
     }
   };
 
+  const notficatioMedications = todaysMedications.filter((medication) =>
+    doseHistory.find(
+      (dose) => dose.medicationId === medication.id && !dose.taken
+    )
+  );
+
   return (
     <ScrollView
       style={styles.container}
@@ -193,9 +199,15 @@ export default function HomeScreen() {
                 size={24}
                 color={'white'}
               />
-              <View style={styles.notificationBadge}>
-                <Text style={styles.notificationCount}>3</Text>
-              </View>
+              {notficatioMedications.length ? (
+                <View style={styles.notificationBadge}>
+                  <Text style={styles.notificationCount}>
+                    {notficatioMedications.length}
+                  </Text>
+                </View>
+              ) : (
+                ''
+              )}
             </TouchableOpacity>
           </View>
           {/* Circular Progress */}
@@ -244,7 +256,7 @@ export default function HomeScreen() {
         <View style={styles.sectionHeader}>
           <Text> Today's Schedule</Text>
           <Link
-            href='/calendar/index'
+            href='/calendar'
             asChild
           >
             <TouchableOpacity>
@@ -358,7 +370,7 @@ export default function HomeScreen() {
                 />
               </TouchableOpacity>
             </View>
-            {todaysMedications.map((medication) => (
+            {notficatioMedications.map((medication) => (
               <View
                 key={medication.id}
                 style={styles.notificationItem}
